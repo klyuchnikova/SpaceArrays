@@ -1,6 +1,7 @@
 package ru.samsung.itschool.spacearrays;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -8,78 +9,57 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
+
 
 public class MyDraw extends View {
 
 	public MyDraw(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		makeSky();
+		this.setOnTouchListener(listener);
+        sky = new Sky(paint);
+        sun = new Star(BitmapFactory.decodeResource(getResources(), R.drawable.sun),300,300,paint);
+        earth = new Earth(BitmapFactory.decodeResource(getResources(), R.drawable.earth),400,400,200,paint);
+        rocket = new SpaceShip(BitmapFactory.decodeResource(getResources(), R.drawable.rocket),300,300,paint);
 	}
 
+
 	Paint paint = new Paint();
-	Bitmap rocket = BitmapFactory.decodeResource(getResources(), R.drawable.rocket);
+    Sky sky;
+    Star sun;
+    SpaceShip rocket;
+    Earth earth;
 	Matrix matrix = new Matrix();
-	
-	float xRocket = 300, yRocket = 300;
-	float vxRocket = 0.5f, vyRocket = -0.5f;
+
+    OnTouchListener listener = new OnTouchListener() {
+		@Override
+		public boolean onTouch(View v, MotionEvent event) {
+
+			// save the X,Y coordinates
+			if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+				sun.Touh(event.getX(), event.getY());
+				rocket.moveTo(event.getX(), event.getY());
+			}
+
+			// let the touch event pass on to whoever needs it
+			return false;
+		}
+
+    };
 	
 	@Override
 	protected void onDraw(Canvas canvas) {
 		
-		drawSky(canvas);
+		sky.draw(canvas);
+		sun.draw(canvas);
+		earth.draw(canvas);
+		rocket.draw(canvas);
 
-		drawRocket(canvas, xRocket, yRocket, vxRocket, vyRocket);
-		
-		xRocket += vxRocket;
-		yRocket += vyRocket;
-		
 		// Запрос на перерисовку экрана
 		invalidate();
 	}
-	
-	final int numStars = 500;
-	
-	int xStar[] = new int[numStars];
-	int yStar[] = new int[numStars];
-	int alphaStar[] = new int[numStars];
-	
-	void makeSky()
-	{
-		// Звезды генерируются в зоне maxX на maxY
-		int maxX = 2000;
-		int maxY = 2000;
-		for (int i = 0; i < numStars; i++)
-		{	
-		   xStar[i] = (int)(Math.random() * maxX);
-		   yStar[i] = (int)(Math.random() * maxY);
-		   alphaStar[i] = (int)(Math.random() * 256);
-		}   
-	}
-	
-	void drawSky(Canvas canvas)
-	{
-		canvas.drawColor(Color.BLACK);
-		paint.setColor(Color.YELLOW);
-		paint.setStrokeWidth(2);
-		for (int i = 0; i < numStars; i++)
-		{	
-		   paint.setAlpha(alphaStar[i]);
-		   alphaStar[i] += (int)(Math.random() * 11) - 5;
-		   if (alphaStar[i] > 255) alphaStar[i] = 255;
-		   if (alphaStar[i] < 0) alphaStar[i] = 0;
-		   canvas.drawCircle(xStar[i], yStar[i], 3, paint);
-		}   
-	}
-	
-	void drawRocket(Canvas canvas, float x, float y, float vx, float vy)
-	{
-		matrix.setScale(0.2f, 0.2f);
-		//Study mathematics, dear young programmer :)  
-		matrix.postRotate((float)Math.toDegrees(Math.atan2(vy, vx)) + 45);
-		matrix.postTranslate(x, y);
-		paint.setAlpha(255);
-		canvas.drawBitmap(rocket, matrix, paint);
-	}
+
+
 	
 }
